@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevSecOps – Tầm quan trọng & Hướng triển khai</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background: #1a1a2e; color: #eee; line-height: 1.5; }
+    .slide { min-height: 100vh; padding: 2rem 3rem; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+    .slide:last-of-type { page-break-after: auto; }
+    h1 { font-size: 2.2rem; margin: 0 0 0.5rem; color: #00d4aa; border-bottom: 2px solid #00d4aa; padding-bottom: 0.5rem; }
+    h2 { font-size: 1.5rem; margin: 1.5rem 0 0.75rem; color: #7fdbda; }
+    h3 { font-size: 1.2rem; margin: 1rem 0 0.5rem; color: #b8e0e0; }
+    p { margin: 0.5rem 0; max-width: 85ch; }
+    table { border-collapse: collapse; width: 100%; max-width: 900px; margin: 0.75rem 0; font-size: 0.95rem; }
+    th, td { border: 1px solid #444; padding: 0.5rem 0.75rem; text-align: left; }
+    th { background: #16213e; color: #00d4aa; }
+    tr:nth-child(even) { background: #16213e; }
+    ul, ol { margin: 0.5rem 0; padding-left: 1.5rem; }
+    li { margin: 0.25rem 0; }
+    code { background: #0f3460; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.9em; }
+    pre { background: #0f3460; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; white-space: pre-wrap; }
+    pre code { background: none; padding: 0; }
+    .phase { background: #16213e; padding: 1rem; border-left: 4px solid #00d4aa; margin: 1rem 0; }
+    .note { font-size: 0.9rem; color: #aaa; margin-top: 0.5rem; }
+    .subtitle { font-size: 1.1rem; color: #aaa; margin-bottom: 2rem; }
+    .ok { color: #00d4aa; }
+    .warn { color: #ffc107; }
+    .fail { color: #ff6b6b; }
+    .example { background: #0f3460; padding: 0.5rem 0.75rem; border-radius: 6px; margin: 0.5rem 0; font-size: 0.95rem; }
+    .diagram { background: #0f3460; padding: 1rem; border-radius: 8px; margin: 1rem 0; min-height: 200px; display: flex; align-items: center; justify-content: center; }
+    .mermaid { font-size: 0.85rem; }
+    .divider { background: #0f3460; border: 2px solid #00d4aa; }
+    .divider h1 { border-bottom: none; text-align: center; font-size: 1.6rem; }
+    @media print { .slide { page-break-after: always; } }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: { primaryColor: '#00d4aa', lineColor: '#7fdbda' } });</script>
+</head>
+<body>
+
+<section class="slide">
+  <h1>DevSecOps – Triển khai Pipeline Bảo mật</h1>
+  <p class="subtitle">Development · Security · Operations</p>
+  <p>Phiên bản ngắn gọn, dễ triển khai. Ref: DevSecOps CI/CD GitLab (02/2026), cicd-devops, be_sec-ops</p>
+</section>
+
+<section class="slide">
+  <h1>Cách dùng tài liệu</h1>
+  <p><strong>Phần đầu (slide tiếp theo):</strong> Tổng quan, giới thiệu — DevSecOps là gì, các loại scan, pipeline, điều kiện cần, 3 bước nhanh, lộ trình 5 phase, trạng thái triển khai, cấu trúc repo, luồng chạy.</p>
+  <p><strong>Phần sau (hướng dẫn chi tiết):</strong> Cấu hình Variables & Runner → Lỗi thường gặp → Kiểm tra sau lần chạy đầu → Từng file (§5.1–5.8) → Jenkins → §5.9 Snyk → Tóm tắt thứ tự thực hiện → Checklist & Cảm ơn.</p>
+  <p class="note">Đọc tuần tự từ đầu đến cuối; khi triển khai có thể nhảy tới phần chi tiết (cấu hình, từng file, lỗi thường gặp).</p>
+</section>
+
+<section class="slide">
+  <h1>§1. Tổng quan — DevSecOps & Lợi ích</h1>
+  <ul>
+    <li><strong>DevSecOps</strong> = tích hợp Security vào toàn bộ vòng đời Dev + Ops. Mục tiêu: <strong>Shift Left Security</strong> — phát hiện lỗ hổng sớm nhất (khi push/MR).</li>
+    <li><strong>Lợi ích:</strong> Phát hiện sớm · Tự động hóa · Tuân thủ · Phản hồi nhanh.</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <h1>§1. Các loại scan & Pipeline một dòng</h1>
+  <table>
+    <tr><th>Loại</th><th>Viết tắt</th><th>Mục tiêu</th><th>Thời điểm</th></tr>
+    <tr><td>Mã nguồn</td><td>SAST</td><td>Lỗ hổng trong code</td><td>Push / MR</td></tr>
+    <tr><td>Dependency</td><td>SCA</td><td>CVE trong thư viện</td><td>Push / MR</td></tr>
+    <tr><td>Secret</td><td>Secret Detection</td><td>API key, password lộ trong repo/Git</td><td>Push / MR</td></tr>
+    <tr><td>Container</td><td>Image Scan</td><td>Lỗ hổng Docker image</td><td>Sau build</td></tr>
+    <tr><td>Runtime</td><td>DAST</td><td>Lỗ hổng app đang chạy</td><td>Sau deploy staging</td></tr>
+  </table>
+  <p class="note"><strong>Pipeline một dòng:</strong> Test → Security-scan (SonarQube, Semgrep, Gitleaks, Trivy) → Build → Image Scan. Security chạy <strong>trước</strong> Build (fail nhanh).</p>
+  <h2>Hình 1 – Luồng pipeline (trực quan)</h2>
+  <div class="mermaid">
+flowchart LR
+  subgraph Stage1["Stage: test"]
+    A[Test]
+  end
+  subgraph Stage2["security-scan"]
+    B1[SonarQube]
+    B2[Semgrep]
+    B3[Gitleaks]
+    B4[Trivy fs]
+  end
+  subgraph Stage3["build"]
+    C[Build]
+  end
+  subgraph Stage4["image-scan"]
+    D[Trivy image]
+  end
+  A --> Stage2
+  Stage2 --> C
+  C --> D
+  </div>
+  <p class="note"><strong>Công cụ bổ sung:</strong> Snyk (SCA + Code SAST) — xem slide "Giới thiệu Snyk" và §5.9.</p>
+</section>
+
+<section class="slide">
+  <h1>Giới thiệu Snyk (công cụ bổ sung)</h1>
+  <p>Snyk = nền tảng bảo mật ứng dụng, dùng <strong>song song</strong> với pipeline (SonarQube, Semgrep, Gitleaks, Trivy).</p>
+  <table>
+    <tr><th>Phần</th><th>Mục tiêu</th><th>Cách chạy</th></tr>
+    <tr><td><strong>Snyk Open Source</strong></td><td>CVE trong dependencies (SCA)</td><td><code>snyk test</code>, <code>snyk monitor</code></td></tr>
+    <tr><td><strong>Snyk Code</strong></td><td>Lỗ hổng trong mã nguồn (SAST)</td><td><code>snyk code test</code>, extension IDE</td></tr>
+  </table>
+  <p><strong>Lợi ích:</strong> Một tài khoản (snyk.io) cho dependency + code; báo cáo UI; tích hợp IDE; CLI đẩy kết quả lên dashboard.</p>
+  <p class="note">Hướng dẫn triển khai chi tiết: <strong>§5.9</strong>.</p>
+</section>
+
+<section class="slide">
+  <h1>Quick Start – Thuật ngữ & Pipeline</h1>
+  <table>
+    <tr><th>Từ</th><th>Ý nghĩa</th><th>Ví dụ</th></tr>
+    <tr><td>SAST</td><td>Quét mã tĩnh</td><td>SQL injection, hardcode password</td></tr>
+    <tr><td>SCA</td><td>Quét dependency</td><td>CVE trong thư viện</td></tr>
+    <tr><td>Secret</td><td>Secret lộ trong repo/Git</td><td>API key, password trong commit</td></tr>
+    <tr><td>Image Scan</td><td>Quét Docker image</td><td>Lỗ hổng base image</td></tr>
+    <tr><td>DAST</td><td>Quét app đang chạy</td><td>Request vào URL staging</td></tr>
+    <tr><td>Enforcement</td><td>Pipeline fail khi vi phạm</td><td>FAIL_ON_SECRET_LEAK=true</td></tr>
+    <tr><td>Snyk Open Source</td><td>SCA (dependency)</td><td>CVE trong thư viện; CLI / CI</td></tr>
+    <tr><td>Snyk Code</td><td>SAST (mã nguồn)</td><td>Injection, secret, weak crypto; CLI / IDE</td></tr>
+  </table>
+  <p class="note">Pipeline: Test → Security-scan → Build → Image Scan. Snyk chạy riêng (CLI/IDE) hoặc thêm job CI — §5.9.</p>
+</section>
+
+<section class="slide">
+  <h1>Điều kiện cần trước khi bắt đầu</h1>
+  <p>Người mới triển khai cần có sẵn (hoặc được cấp):</p>
+  <ul>
+    <li><strong>GitLab</strong> (project có quyền CI/CD) hoặc <strong>Jenkins</strong>.</li>
+    <li><strong>Runner:</strong> GitLab → Settings → CI/CD → Runners; Runner cần tag <code>sonarqube</code> (hoặc đổi tag trong ci/*.yml cho khớp).</li>
+    <li><strong>SonarQube:</strong> URL truy cập được từ Runner (vd. https://sonar.mycompany.com). Token tạo tại SonarQube → My Account → Security → Generate Tokens.</li>
+    <li><strong>Variables:</strong> Đặt tại GitLab → Settings → CI/CD → Variables (Expand) → Add variable. <code>SONAR_TOKEN</code> bắt buộc bật <strong>Mask variable</strong>.</li>
+  </ul>
+  <p class="note">Nếu thiếu một trong các mục trên, pipeline sẽ fail ở bước tương ứng — xem slide "Lỗi thường gặp (GitLab)" cuối §4.</p>
+</section>
+
+<section class="slide">
+  <h1>Quick Start – Triển khai 3 bước</h1>
+  <ol>
+    <li><strong>Chuẩn bị:</strong> GitLab (hoặc Jenkins), Runner, SonarQube. Variables: SONAR_HOST_URL, SONAR_TOKEN (masked).</li>
+    <li><strong>Thêm file:</strong> .gitlab-ci.yml (include ci/sast.yml, ci/sca.yml, ci/image-scan.yml), sonar-project.properties, .gitleaks.toml. Copy từ repo <strong>be_sec-ops</strong> (cùng workspace) hoặc <strong>cicd-devops</strong> — đường dẫn: root repo, thư mục <code>ci/</code>.</li>
+    <li><strong>Chạy:</strong> Push code → xem pipeline & Security Dashboard. FAIL_ON_CRITICAL=false lúc đầu; sẵn sàng thì true.</li>
+  </ol>
+  <p class="note"><strong>Đọc tiếp:</strong> §2 (cấu trúc repo) → §3 (luồng pipeline) → §4 (biến) → §5 (nội dung từng file).</p>
+  <table>
+    <tr><th>Phase</th><th>File / Job</th><th>Biến</th></tr>
+    <tr><td>1</td><td>.gitlab-ci.yml, ci/sast.yml, sonar-project.properties, .gitleaks.toml, .semgrepignore</td><td>SONAR_*, FAIL_ON_SECRET_LEAK</td></tr>
+    <tr><td>2</td><td>ci/sca.yml, ci/image-scan.yml, build</td><td>—</td></tr>
+    <tr><td>3</td><td>Bỏ || true, --exit-code 1</td><td>FAIL_ON_CRITICAL=true</td></tr>
+    <tr><td>4</td><td>ci/dast.yml</td><td>DAST_WEBSITE</td></tr>
+    <tr><td>5</td><td>.post, webhook</td><td>SLACK_WEBHOOK_URL</td></tr>
+  </table>
+</section>
+
+<section class="slide">
+  <h1>§6. Lộ trình 5 Phase (kế hoạch triển khai)</h1>
+  <p>Dùng để <strong>lên kế hoạch</strong> theo tuần. Triển khai từ Phase 1 → 2 → 3; Phase 4–5 tùy nhu cầu.</p>
+  <table>
+    <tr><th>Phase</th><th>Thời gian</th><th>Nội dung chính</th><th>Kết quả</th></tr>
+    <tr><td>1</td><td>Tuần 1–2</td><td>SonarQube, Semgrep, Gitleaks (§5.1–5.3)</td><td>Visibility, chưa block</td></tr>
+    <tr><td>2</td><td>Tuần 3–4</td><td>ci/sca.yml, ci/image-scan.yml, build (§5.4–5.5)</td><td>Lỗ hổng dependency & image</td></tr>
+    <tr><td>3</td><td>Tuần 5–6</td><td>Enforcement (§5.6)</td><td>Pipeline block khi nghiêm trọng</td></tr>
+    <tr><td>4</td><td>Tuần 7–8</td><td>Staging, ci/dast.yml (§5.7)</td><td>DAST</td></tr>
+    <tr><td>5</td><td>Tuần 9–12+</td><td>Notification, tối ưu (§5.8)</td><td>Pipeline trưởng thành</td></tr>
+  </table>
+</section>
+
+<section class="slide">
+  <h1>§8. Đã triển khai & Đối chiếu</h1>
+  <table>
+    <tr><th>Phase</th><th>Trạng thái</th><th>Ghi chú</th></tr>
+    <tr><td>1</td><td class="ok">✅</td><td>SonarQube, Semgrep, Gitleaks</td></tr>
+    <tr><td>2</td><td class="ok">✅</td><td>Trivy fs + image, SBOM, Security Dashboard</td></tr>
+    <tr><td>3</td><td class="ok">✅</td><td>FAIL_ON_SECRET_LEAK, FAIL_ON_CRITICAL</td></tr>
+    <tr><td>4</td><td class="fail">❌</td><td>DAST (ZAP) chưa</td></tr>
+    <tr><td>5</td><td class="warn">⚠️</td><td>IaC, cache; notification chưa</td></tr>
+    <tr><td>Snyk (bổ sung)</td><td class="ok">✅</td><td>Open Source (SCA) + Code (SAST); CLI, IDE, optional CI</td></tr>
+  </table>
+  <p><strong>Tóm số:</strong> 3/5 phase đủ; 1 một phần; 1 chưa. Snyk dùng bổ sung. Hướng dẫn khớp pipeline Jenkins + GitLab.</p>
+</section>
+
+<section class="slide">
+  <h1>§2. Cấu trúc repo (nhìn từ ngoài)</h1>
+  <p>Khi mở repo, bạn thấy (hoặc cần tạo) các file sau. Đọc từ <strong>cửa vào</strong> (.gitlab-ci.yml) xuống.</p>
+  <pre>repo/
+├── .gitlab-ci.yml          ← Cửa vào: stages, biến, gọi ci/*.yml
+├── sonar-project.properties   ← Cấu hình SonarQube
+├── .gitleaks.toml          ← Allowlist secret (path/stopwords)
+├── .semgrepignore          ← Bỏ qua node_modules, dist
+├── ci/
+│   ├── sast.yml            ← SAST + Secret: SonarQube, Semgrep, Gitleaks
+│   ├── sca.yml             ← SCA: Trivy dependency + SBOM
+│   └── image-scan.yml      ← Quét Docker image sau build
+└── src/                    ← Mã nguồn ứng dụng</pre>
+</section>
+
+<section class="slide">
+  <h1>§2. File / thư mục — Vai trò (một dòng)</h1>
+  <table>
+    <tr><th>File</th><th>Vai trò ngắn</th><th>Phase</th></tr>
+    <tr><td>.gitlab-ci.yml</td><td>Stages, biến, include ci/*.yml</td><td>1</td></tr>
+    <tr><td>ci/sast.yml</td><td>SonarQube, Semgrep, Gitleaks</td><td>1</td></tr>
+    <tr><td>ci/sca.yml</td><td>Trivy fs (dependency) + SBOM</td><td>2</td></tr>
+    <tr><td>ci/image-scan.yml</td><td>Trivy quét Docker image (sau build)</td><td>2</td></tr>
+    <tr><td>sonar-project.properties</td><td>SonarQube: project, coverage path</td><td>1</td></tr>
+    <tr><td>.gitleaks.toml</td><td>Path/chuỗi không coi là leak</td><td>1</td></tr>
+    <tr><td>.semgrepignore</td><td>Bỏ qua node_modules, dist</td><td>1</td></tr>
+  </table>
+  <h2>Hình 2 – Cấu trúc repo (trực quan)</h2>
+  <div class="mermaid">
+flowchart TB
+  root["repo/"]
+  root --> f1[".gitlab-ci.yml"]
+  root --> f2["sonar-project.properties"]
+  root --> f3[".gitleaks.toml"]
+  root --> f4[".semgrepignore"]
+  root --> ci["ci/"]
+  root --> src["src/"]
+  ci --> sast["sast.yml"]
+  ci --> sca["sca.yml"]
+  ci --> img["image-scan.yml"]
+  </div>
+</section>
+
+<section class="slide">
+  <h1>§3. Luồng pipeline (stages & jobs)</h1>
+  <p><strong>Thứ tự stage:</strong> test → security-scan → build → image-scan. Trong security-scan, các job chạy <strong>song song</strong>. Fail Fast: security chạy trước build.</p>
+  <p><strong>Khi nào pipeline chạy:</strong> Trong template, job có <code>rules</code> — chỉ chạy khi có <strong>Merge Request</strong> hoặc push lên <strong>branch mặc định</strong> (main/master). Push lên branch khác có thể không chạy đủ pipeline.</p>
+  <table>
+    <tr><th>Stage</th><th>Job (file)</th><th>Mục đích</th></tr>
+    <tr><td>test</td><td>test</td><td>Unit test, coverage cho SonarQube</td></tr>
+    <tr><td>security-scan</td><td>sonarqube-scan, semgrep-scan, secret-detection, trivy-fs</td><td>SAST, Secret, SCA — song song</td></tr>
+    <tr><td>build</td><td>build</td><td>Build Docker image, có thể push Registry</td></tr>
+    <tr><td>image-scan</td><td>trivy-image (ci/image-scan.yml)</td><td>Quét image vừa build</td></tr>
+  </table>
+  <h2>Hình 3 – Stage và job (trực quan)</h2>
+  <div class="mermaid">
+flowchart LR
+  subgraph test["test"]
+    T[test]
+  end
+  subgraph sec["security-scan"]
+    S1[sonarqube]
+    S2[semgrep]
+    S3[secret]
+    S4[trivy-fs]
+  end
+  subgraph build["build"]
+    B[build]
+  end
+  subgraph img["image-scan"]
+    I[trivy-image]
+  end
+  test --> sec
+  sec --> build
+  build --> img
+  </div>
+</section>
+
+<section class="slide divider">
+  <h1>——— Phần sau: Hướng dẫn chi tiết ———</h1>
+  <p style="text-align: center; margin-top: 1rem;">Cấu hình Variables & Runner · Lỗi thường gặp · Từng file (§5.1–5.8) · Jenkins · §5.9 Snyk · Tóm tắt thứ tự · Checklist</p>
+</section>
+
+<section class="slide">
+  <h1>§4. Cấu hình trước khi chạy (Variables, Runner)</h1>
+  <p>Biến <strong>không</strong> ghi trong repo — đặt trong <strong>GitLab → Settings → CI/CD → Variables</strong>.</p>
+  <p><strong>Hướng dẫn từng bước (GitLab):</strong> (1) Vào project → (2) Settings → (3) CI/CD → (4) Variables (Expand) → (5) Add variable: Key (vd. SONAR_HOST_URL), Value, bật Mask variable cho token. Lặp lại cho SONAR_TOKEN (bắt buộc masked), FAIL_ON_SECRET_LEAK, FAIL_ON_CRITICAL.</p>
+  <table>
+    <tr><th>Biến</th><th>Ý nghĩa</th><th>Ví dụ giá trị</th><th>Bắt buộc?</th></tr>
+    <tr><td>SONAR_HOST_URL</td><td>URL server SonarQube</td><td><code>https://sonar.mycompany.com</code></td><td>Có (nếu dùng SonarQube)</td></tr>
+    <tr><td>SONAR_TOKEN</td><td>Token SonarQube (bật Mask variable)</td><td><code>sqp_xxxx...</code></td><td>Có</td></tr>
+    <tr><td>SONAR_PROJECT_KEY</td><td>Có thể đặt trong .gitlab-ci.yml</td><td><code>be_secOps</code></td><td>Tùy chọn</td></tr>
+    <tr><td>FAIL_ON_SECRET_LEAK</td><td>true = fail khi Gitleaks tìm leak</td><td><code>true</code></td><td>Tùy chọn; thường true</td></tr>
+    <tr><td>FAIL_ON_CRITICAL</td><td>true = fail khi có CRITICAL</td><td>Ban đầu <code>false</code>, sau <code>true</code></td><td>Tùy chọn</td></tr>
+  </table>
+  <p class="note"><strong>Runner:</strong> Job dùng <code>tags: [sonarqube]</code> → Runner cần tag <code>sonarqube</code>.</p>
+  <h2>Hình 4 – Vị trí Variables trong GitLab (trực quan)</h2>
+  <div class="mermaid">
+flowchart LR
+  A[Project] --> B[Settings]
+  B --> C[CI/CD]
+  C --> D[Variables]
+  D --> E[Add variable]
+  </div>
+  <p class="note">Có thể chụp màn hình màn hình Variables và đặt vào <code>docs/images/gitlab-variables.png</code> để tài liệu thêm trực quan.</p>
+</section>
+
+<section class="slide">
+  <h1>§4 (tiếp). Lỗi thường gặp – GitLab Pipeline</h1>
+  <p>Khi pipeline fail lần đầu, kiểm tra theo thứ tự:</p>
+  <table>
+    <tr><th>Triệu chứng</th><th>Cách xử lý</th></tr>
+    <tr><td>Job <code>sonarqube-scan</code> fail: connection / 401</td><td>Kiểm tra SONAR_HOST_URL (đúng URL?), SONAR_TOKEN (đã Mask variable? Token còn hiệu lực?). Runner có ra internet tới SonarQube không.</td></tr>
+    <tr><td>Job không chạy / "No runners available"</td><td>Runner có tag <code>sonarqube</code> (hoặc đổi <code>tags:</code> trong ci/sast.yml cho khớp tag Runner của bạn).</td></tr>
+    <tr><td><code>secret-detection</code> fail: leak trong file test</td><td>Thêm path/stopwords vào .gitleaks.toml (allowlist) — xem §5.3.</td></tr>
+    <tr><td>Semgrep báo quá nhiều cảnh báo từ node_modules</td><td>Tạo .semgrepignore với nội dung: <code>node_modules/</code>, <code>dist/</code>.</td></tr>
+    <tr><td>Build / image-scan fail: image not found</td><td>Đảm bảo job <code>build</code> chạy trước và IMAGE_NAME thống nhất (vd. CI_REGISTRY_IMAGE:CI_COMMIT_SHORT_SHA).</td></tr>
+  </table>
+  <p class="note">Chi tiết Jenkins: xem slide "Jenkins – Xử lý lỗi thường gặp".</p>
+</section>
+
+<section class="slide">
+  <h1>Kiểm tra nhanh sau lần chạy đầu</h1>
+  <p>Sau khi push và pipeline chạy xong, nên xác nhận:</p>
+  <ol>
+    <li><strong>Pipeline:</strong> Trang CI/CD → Pipelines — tất cả stage (test, security-scan, build, image-scan) đã chạy; job nào failed thì xem log + slide "Lỗi thường gặp – GitLab".</li>
+    <li><strong>Security Dashboard:</strong> Security & Compliance → Dashboard — có báo cáo SAST (Semgrep), Dependency (Trivy fs), Container (Trivy image).</li>
+    <li><strong>SonarQube:</strong> Mở SONAR_HOST_URL → project tên SONAR_PROJECT_KEY — có kết quả scan và (nếu có) coverage.</li>
+  </ol>
+  <p class="note">Nếu thiếu một trong ba: kiểm tra Variables, Runner tag, và rules (MR / default branch).</p>
+</section>
+
+<section class="slide">
+  <h1>§5. Vào trong từng file (code & cấu hình)</h1>
+  <p>Phần này mô tả <strong>nội dung bên trong</strong> từng file đã liệt kê ở §2. Đọc kèm repo mở sẵn.</p>
+  <p><strong>5.1</strong> .gitlab-ci.yml · <strong>5.2</strong> SonarQube · <strong>5.3</strong> .gitleaks.toml + secret-detection · <strong>5.4</strong> ci/sca.yml · <strong>5.5</strong> ci/image-scan.yml · <strong>5.6–5.8</strong> Enforcement, DAST, Notification · <strong>5.9</strong> Snyk (triển khai chi tiết).</p>
+</section>
+
+<section class="slide">
+  <h1>§5.1 File .gitlab-ci.yml (cửa vào)</h1>
+  <p>File ở <strong>root</strong>: stages, biến, include ci/*.yml. Chỉnh SONAR_PROJECT_KEY (và biến nếu không dùng Variables).</p>
+  <pre><code>stages: [test, security-scan, build, image-scan]
+variables: { SONAR_PROJECT_KEY: be_secOps, FAIL_ON_SECRET_LEAK: "true", FAIL_ON_CRITICAL: "false" }
+include:
+  - local: ci/sast.yml
+  - local: ci/sca.yml
+  - local: ci/image-scan.yml</code></pre>
+  <p class="note">Job test: unit test + artifact coverage/ cho SonarQube. Test fail vẫn tạo lcov tối thiểu (fallback).</p>
+</section>
+
+<section class="slide">
+  <h1>§5.2 SonarQube — sonar-project.properties + job</h1>
+  <p>File <strong>sonar-project.properties</strong> (root): khai báo projectKey, sources, exclusions, đường dẫn coverage. <strong>Lấy SONAR_TOKEN:</strong> SonarQube → My Account → Security → Generate Tokens → copy vào GitLab Variables (bật Mask variable).</p>
+  <pre><code># sonar-project.properties (ví dụ)
+sonar.projectKey=be_secOps
+sonar.sources=.
+sonar.exclusions=**/node_modules/**,**/dist/**,**/coverage/**
+sonar.javascript.lcov.reportPaths=coverage/lcov.info</code></pre>
+  <p>Job <strong>sonarqube-scan</strong> trong ci/sast.yml: stage security-scan, needs: [test], chạy sonar-scanner với -Dsonar.host.url, -Dsonar.token (từ Variables).</p>
+</section>
+
+<section class="slide">
+  <h1>§5.3 Gitleaks — .gitleaks.toml + job secret-detection</h1>
+  <p>File <strong>.gitleaks.toml</strong> (root): allowlist path/chuỗi không coi là leak. Job <strong>secret-detection</strong>: gitleaks detect; nếu FAIL_ON_SECRET_LEAK=true và có leak (sau allowlist) → job exit 1.</p>
+  <pre><code># .gitleaks.toml (ví dụ tối thiểu)
+[extend]
+  useDefault = true
+[allowlist]
+  paths = ['''src/_devsecops-test/.*''', '''docs/.*''']
+  stopwords = ["admin123", "example", "changeme"]</code></pre>
+  <p>Tạo <strong>.semgrepignore</strong> (root): mỗi dòng một path, ví dụ <code>node_modules/</code>, <code>dist/</code> — giảm cảnh báo từ thư mục không cần quét.</p>
+</section>
+
+<section class="slide">
+  <h1>§5.4 File ci/sca.yml (Trivy SCA, SBOM)</h1>
+  <p>Trong <code>ci/sca.yml</code>: quét filesystem, cache <code>.trivycache/</code>, report GitLab dependency_scanning.</p>
+  <pre><code>trivy-fs:
+  stage: security-scan
+  cache: { key: trivy-db, paths: [.trivycache/] }
+  script:
+    - docker run ... aquasec/trivy:0.69.2 fs . --severity HIGH,CRITICAL
+      --ignore-unfixed --format json -o trivy-fs-report.json
+    - docker run ... fs . --scanners vuln --format cyclonedx -o sbom-fs.json || true
+  artifacts:
+    paths: [trivy-fs-report.json, sbom-fs.json]
+    reports: { dependency_scanning: trivy-fs-report.json }</code></pre>
+  <p class="note">--ignore-unfixed = bỏ CVE chưa có bản vá. SBOM CycloneDX phục vụ supply chain & compliance.</p>
+</section>
+
+<section class="slide">
+  <h1>§5.5 File ci/image-scan.yml (Trivy Image)</h1>
+  <p>Job <strong>trivy-image</strong>: stage image-scan, <strong>needs: [build]</strong> (chạy sau build). Dùng cùng <code>IMAGE_NAME</code> với job build (vd. ${CI_REGISTRY_IMAGE:-$CI_PROJECT_NAME}:${CI_COMMIT_SHORT_SHA}). Mount <code>docker.sock</code> để Trivy đọc image; nếu image ở Registry private thì truyền CI_REGISTRY_USER, CI_REGISTRY_PASSWORD.</p>
+  <pre><code>trivy-image:
+  stage: image-scan
+  needs: [build]
+  before_script:
+    - export IMAGE_NAME="${CI_REGISTRY_IMAGE:-$CI_PROJECT_NAME}:${CI_COMMIT_SHORT_SHA}"
+  script:
+    - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock ...
+      aquasec/trivy:0.69.2 image "${IMAGE_NAME}" --severity HIGH,CRITICAL
+      --format json -o trivy-image-report.json
+  reports: { container_scanning: trivy-image-report.json }</code></pre>
+</section>
+
+<section class="slide">
+  <h1>§5.6–5.8 Enforcement, DAST, Notification</h1>
+  <ul>
+    <li><strong>Secret:</strong> FAIL_ON_SECRET_LEAK=true → Gitleaks exit 1 khi có leak (sau allowlist) → job fail.</li>
+    <li><strong>CRITICAL:</strong> FAIL_ON_CRITICAL=true → Semgrep bỏ <code>|| true</code>; Trivy thêm <code>--exit-code 1</code>, không <code>|| true</code>.</li>
+    <li><strong>allow_failure:</strong> Trong template nhiều job đặt <code>allow_failure: true</code> → job fail (cam) nhưng pipeline vẫn passed (xanh). Muốn pipeline <strong>đỏ</strong> khi CRITICAL/secret thì đặt <code>allow_failure: false</code> cho job tương ứng (hoặc bỏ rule allow_failure khi bật enforcement).</li>
+    <li><strong>Rollback:</strong> Tạm set FAIL_ON_CRITICAL=false hoặc FAIL_ON_SECRET_LEAK=false, tạo issue, fix trong 48h, bật lại.</li>
+    <li><strong>5.7 DAST:</strong> Thêm stage deploy-staging, dast; file ci/dast.yml (ZAP), DAST_WEBSITE.</li>
+    <li><strong>5.8 Phase 5:</strong> Job .post + SLACK_WEBHOOK_URL; cache; IaC/License optional.</li>
+  </ul>
+  <pre><code># Ví dụ trong job (ci/sast.yml)
+if [ "${FAIL_ON_CRITICAL}" = "true" ]; then
+  semgrep scan --config=auto --gitlab-sast --gitlab-sast-output=gl-sast-report.json .
+else
+  semgrep scan ... || true
+fi</code></pre>
+</section>
+
+<section class="slide">
+  <h1>§7. Jenkins (nếu dùng Jenkins)</h1>
+  <h2>Yêu cầu & thứ tự stages</h2>
+  <p><strong>Yêu cầu:</strong> Agent có Docker (socket mount + Docker CLI trong container). Plugin: Pipeline, SonarQube Scanner; cấu hình SonarQube servers + SonarScanner tool.</p>
+  <pre><code>Check Docker → SCM → Test → SonarQube → Secret Detection → SAST (Semgrep)
+  → IaC Scan → Trivy FS → Build → Image Scan → (Push) → Archive</code></pre>
+  <p class="note">Security stages chạy trước Build; Image Scan sau Build.</p>
+</section>
+
+<section class="slide">
+  <h1>Jenkins – Biến môi trường</h1>
+  <table>
+    <tr><th>Biến</th><th>Ý nghĩa</th><th>Gợi ý</th></tr>
+    <tr><td>WORKSPACE_HOST_PATH</td><td>Path workspace trên Docker host</td><td>Bắt buộc khi Jenkins trong container. Linux: /opt/jenkins/workspace/&lt;job&gt;. Mac: path trong /Users hoặc File Sharing.</td></tr>
+    <tr><td>SONAR_PROJECT_KEY</td><td>Project key SonarQube</td><td>VD: be_devSecOps_jenkin</td></tr>
+    <tr><td>FAIL_ON_SECRET_LEAK</td><td>true = fail khi Gitleaks tìm leak</td><td>Phase 3</td></tr>
+    <tr><td>FAIL_ON_CRITICAL</td><td>true = fail khi SAST/SCA/Image có CRITICAL</td><td>Phase 3</td></tr>
+    <tr><td>REGISTRY_URL / REGISTRY_IMAGE_PREFIX</td><td>Push image</td><td>Kèm REGISTRY_CREDENTIALS_ID</td></tr>
+  </table>
+  <p class="note">Set: Global properties → Environment variables hoặc per-job (EnvInject / parameter).</p>
+</section>
+
+<section class="slide">
+  <h1>Jenkins – Cấu hình một lần (server)</h1>
+  <ul>
+    <li><strong>SonarQube Scanner:</strong> Manage Jenkins → Global Tool Configuration → SonarQube Scanner (Install automatically hoặc path).</li>
+    <li><strong>SonarQube server:</strong> Manage Jenkins → System → SonarQube servers → Add (URL, Server authentication token từ Credentials).</li>
+    <li><strong>Credential SonarQube:</strong> Credentials → Secret text (token).</li>
+    <li><strong>Credential Registry (nếu push):</strong> Username/Password → ID vd. registry-credentials.</li>
+  </ul>
+  <p>Trong Jenkinsfile: <code>withSonarQubeEnv()</code> lấy URL + token từ cấu hình server.</p>
+</section>
+
+<section class="slide">
+  <h1>Jenkins – Tạo job Pipeline</h1>
+  <ol>
+    <li>New Item → Pipeline → Pipeline from SCM → Git (URL, Credentials, Branch).</li>
+    <li>Script Path: <code>Jenkinsfile</code>.</li>
+    <li>Set biến: <strong>WORKSPACE_HOST_PATH</strong> (path trên host của workspace hoặc repo), <strong>SONAR_PROJECT_KEY</strong>.</li>
+  </ol>
+  <p>Repo cần có <strong>Jenkinsfile</strong> tại root (copy từ be_sec-ops / cicd-devops).</p>
+</section>
+
+<section class="slide">
+  <h1>Jenkins – Code: Check Docker & wsPath</h1>
+  <p>Mọi bước mount dùng <strong>wsPath</strong> = WORKSPACE_HOST_PATH hoặc WORKSPACE. Khi Jenkins trong Docker, host cần path thật có code.</p>
+  <pre><code>stage('Check Docker') {
+  env.DOCKER_CMD = sh(script: 'docker info ... && echo docker', returnStdout: true)?.trim() ?: 'docker'
+}
+def wsPath = env.WORKSPACE_HOST_PATH?.trim() ?: env.WORKSPACE
+// Mọi docker run: -v "${wsPath}:/app" hoặc -v "${wsPath}:/src"</code></pre>
+  <p class="note">WORKSPACE_HOST_PATH đúng → Test/Gitleaks/Trivy thấy package.json, .git, lockfile.</p>
+</section>
+
+<section class="slide">
+  <h1>§7. Jenkins – Code (tóm tắt)</h1>
+  <p><strong>wsPath</strong> = WORKSPACE_HOST_PATH hoặc WORKSPACE; mọi docker run dùng -v "${wsPath}:/app" hoặc :/src.</p>
+  <p><strong>Stages:</strong> Test (pnpm test:cov, fallback coverage) → SonarQube (withSonarQubeEnv, qualitygate.wait) → Secret (Gitleaks, FAIL_ON_SECRET_LEAK) → Semgrep (gl-sast-report) → IaC (Trivy config) → Trivy FS (sbom-fs, --exit-code 1 khi FAIL_ON_CRITICAL) → Build → Image Scan (trivy image) → Push (withCredentials nếu REGISTRY_*) → archiveArtifacts.</p>
+  <p class="note">Chi tiết: xem Jenkinsfile trong repo be_sec-ops.</p>
+</section>
+
+<section class="slide">
+  <h1>Jenkins – Xử lý lỗi thường gặp</h1>
+  <table>
+    <tr><th>Triệu chứng</th><th>Cách xử lý</th></tr>
+    <tr><td>Test: No package.json in /app</td><td>Set WORKSPACE_HOST_PATH = path trên host có code (bind mount)</td></tr>
+    <tr><td>Gitleaks: not a git repository / 0 commits</td><td>WORKSPACE_HOST_PATH trỏ đúng thư mục repo (có .git)</td></tr>
+    <tr><td>Trivy: 0 config files</td><td>Cùng WORKSPACE_HOST_PATH đúng cho mọi stage</td></tr>
+    <tr><td>SonarQube: No report imported (coverage)</td><td>Workspace và host path cùng volume hoặc chấp nhận không import</td></tr>
+    <tr><td>docker: command not found</td><td>Cài Docker CLI trong container Jenkins</td></tr>
+    <tr><td>Mac: path is not shared from the host</td><td>Path trong /Users hoặc thêm File Sharing; hoặc bind mount workspace</td></tr>
+  </table>
+  <p class="note">Công thức: nếu -v /opt/jenkins/workspace:/var/jenkins_home/workspace thì WORKSPACE_HOST_PATH=/opt/jenkins/workspace/&lt;tên_job&gt;</p>
+</section>
+
+<section class="slide">
+  <h1>§5.9 Snyk – Triển khai chi tiết (Open Source + Code)</h1>
+  <p>Snyk gồm <strong>hai phần</strong>: quét dependency (SCA) và quét mã nguồn (SAST). Dùng CLI, extension IDE (VS Code/Cursor) hoặc job CI (tùy chọn).</p>
+  <h2>Chuẩn bị</h2>
+  <ol>
+    <li>Tài khoản <a href="https://snyk.io" target="_blank" rel="noopener">snyk.io</a>, API Token (Account/Org settings).</li>
+    <li>CLI: <code>npm install -g snyk</code> rồi <code>snyk auth</code> (hoặc set <code>SNYK_TOKEN</code> trong CI).</li>
+  </ol>
+  <h2>Snyk Open Source (SCA)</h2>
+  <table>
+    <tr><th>Lệnh</th><th>Ý nghĩa</th></tr>
+    <tr><td><code>snyk test</code></td><td>Quét dependency, in ra terminal</td></tr>
+    <tr><td><code>snyk monitor</code></td><td>Gửi snapshot dependency lên Snyk UI</td></tr>
+  </table>
+  <p class="example"><strong>Ví dụ fix CVE:</strong> Snyk báo <code>multer</code> CVE → thêm <code>"pnpm": { "overrides": { "multer": "2.1.1" } }</code> trong package.json → <code>pnpm install</code> → <code>snyk test</code> lại.</p>
+  <p class="note"><code>snyk monitor</code> chỉ hỗ trợ dependency, không hỗ trợ Snyk Code.</p>
+</section>
+
+<section class="slide">
+  <h1>§5.9 Snyk (tiếp) – Snyk Code & CI</h1>
+  <h2>Snyk Code (SAST)</h2>
+  <table>
+    <tr><th>Cách</th><th>Mô tả</th></tr>
+    <tr><td>Extension IDE</td><td>Cài "Snyk Security" (VS Code/Cursor) → đăng nhập → xem issues trong panel</td></tr>
+    <tr><td>CLI local</td><td><code>snyk code test</code></td></tr>
+    <tr><td>CLI đẩy lên UI</td><td><code>snyk code test --report --project-name=be_sec-ops</code></td></tr>
+  </table>
+  <p class="note"><strong>Taint analysis:</strong> Snyk Code cần thấy luồng source (vd. req.query) → sink (exec, fetch…). Nếu chỉ có hàm nhận tham số, có thể chỉ báo 1 issue. Có hàm truyền req.query vào sink (vd. handleRequest trong snyk-code-extra.ts) thì báo đủ. Xem CAPABILITIES-REFERENCE.md §7.</p>
+  <h2>CI (tùy chọn)</h2>
+  <p>Biến <code>SNYK_TOKEN</code> (masked). Job: <code>snyk monitor</code> (dependency); gửi Code: <code>snyk code test --report --project-name=$CI_PROJECT_NAME</code>.</p>
+  <p><strong>Tóm tắt lệnh:</strong> <code>snyk test</code> · <code>snyk monitor</code> · <code>snyk code test</code> · <code>snyk code test --report --project-name=&lt;tên&gt;</code>. Ví dụ mô phỏng: src/_devsecops-test/, docs/CAPABILITIES-REFERENCE.md §7.</p>
+</section>
+
+<section class="slide">
+  <h1>Tóm tắt thứ tự thực hiện (theo phase)</h1>
+  <table>
+    <tr><th>#</th><th>Phase</th><th>File / Hành động</th><th>Ghi chú</th></tr>
+    <tr><td>1</td><td>1</td><td>.gitlab-ci.yml (stages, include ci/sast.yml)</td><td>Copy từ template</td></tr>
+    <tr><td>2</td><td>1</td><td>Job test (artifact coverage/)</td><td>Cho SonarQube</td></tr>
+    <tr><td>3</td><td>1</td><td>sonar-project.properties + job SonarQube trong ci/sast.yml</td><td>SONAR_* trong Variables</td></tr>
+    <tr><td>4</td><td>1</td><td>Job Semgrep trong ci/sast.yml</td><td>reports.sast</td></tr>
+    <tr><td>5</td><td>1</td><td>.gitleaks.toml + job secret-detection</td><td>FAIL_ON_SECRET_LEAK</td></tr>
+    <tr><td>6</td><td>2</td><td>ci/sca.yml (trivy-fs, sbom-fs)</td><td>Cache .trivycache</td></tr>
+    <tr><td>7</td><td>2</td><td>Job build + ci/image-scan.yml (trivy-image, sbom-image)</td><td>needs: build</td></tr>
+    <tr><td>8</td><td>3</td><td>FAIL_ON_CRITICAL=true; bỏ || true, thêm --exit-code 1</td><td>Rollback: tạm false</td></tr>
+    <tr><td>9</td><td>4</td><td>Stage deploy-staging, dast; ci/dast.yml (ZAP)</td><td>DAST sau staging</td></tr>
+    <tr><td>10</td><td>5</td><td>Job .post + webhook CRITICAL; IaC/License (optional)</td><td>SLACK_WEBHOOK_URL</td></tr>
+  </table>
+</section>
+
+<section class="slide">
+  <h1>Chi tiết đã có trong pipeline</h1>
+  <ul>
+    <li><strong>Test + Coverage:</strong> Jest, lcov cho SonarQube</li>
+    <li><strong>SAST:</strong> SonarQube (Quality Gate), Semgrep (GitLab SAST report)</li>
+    <li><strong>Secret Detection:</strong> Gitleaks, allowlist fixture & docs</li>
+    <li><strong>SCA:</strong> Trivy fs, cache, report dependency_scanning</li>
+    <li><strong>Image Scan:</strong> Trivy image, report container_scanning, SBOM</li>
+    <li><strong>SBOM:</strong> CycloneDX (fs + image)</li>
+    <li><strong>IaC Scan (Jenkins):</strong> Trivy config (Dockerfile, K8s, Terraform)</li>
+    <li><strong>Enforcement:</strong> FAIL_ON_SECRET_LEAK (mặc định true), FAIL_ON_CRITICAL</li>
+  </ul>
+</section>
+
+<section class="slide">
+  <h1>§8. Checklist doanh nghiệp (tóm tắt)</h1>
+  <p><strong>Chuẩn bị:</strong> Đội ngũ; GitLab + Runner (tag khớp), SonarQube, Registry, Staging; pilot; training. <strong>Hạ tầng:</strong> Runner tags: sonarqube; credentials Variables (masked). <strong>CI/CD:</strong> .gitlab-ci.yml + include ci/sast, sca, image-scan; Quality Gate; SONAR_*, FAIL_ON_*.</p>
+  <p><strong>Cấu trúc:</strong> .gitlab-ci.yml, ci/sast.yml, ci/sca.yml, ci/image-scan.yml, sonar-project.properties, .gitleaks.toml, .semgrepignore (template: cicd-devops). <strong>Xử lý:</strong> CRITICAL → block; false positive → .semgrepignore, .gitleaks.toml. <strong>Vận hành:</strong> SLA; rollback: tạm FAIL_ON_CRITICAL=false, fix, bật lại. <strong>Thứ tự:</strong> Week 0 → Phase 1–2 → Phase 3 → Phase 4 DAST → Phase 5.</p>
+</section>
+
+<section class="slide">
+  <h1>Cảm ơn</h1>
+  <p><strong>Tài liệu tham khảo:</strong></p>
+  <ul>
+    <li>DevSecOps CI/CD GitLab (Self-Hosted) – 1.0 | 02/2026</li>
+    <li>cicd-devops: DEVSECOPS-IMPLEMENTATION-PLAN.md, DEVSECOPS-PLAN-ASSESSMENT.md</li>
+    <li>be_sec-ops: Jenkinsfile, .gitlab-ci.yml, ci/*.yml, docs/PIPELINE-SECURITY.md</li>
+  </ul>
+  <p><strong>Xuất PDF:</strong> Mở file HTML trong trình duyệt → Ctrl+P (Cmd+P) → Lưu dưới dạng PDF. Bản chi tiết đầy đủ: <code>docs/DEVSECOPS-THUYET-TRINH.md</code>.</p>
+  <p><strong>Liên hệ / Q&A</strong></p>
+</section>
+
+</body>
+</html>
