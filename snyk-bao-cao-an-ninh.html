@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <title>Báo cáo bảo mật Snyk</title>
+  <style>/* In bảng rộng: md-to-pdf + trình duyệt */
+@page {
+  margin: 14mm 12mm;
+}
+
+html {
+  font-size: 10.5pt;
+}
+
+body {
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  line-height: 1.45;
+  color: #1a1a1a;
+}
+
+main.report {
+  max-width: 100%;
+}
+
+.doc-header {
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #0c4a6e;
+}
+
+.doc-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.55rem;
+  color: #0c4a6e;
+}
+
+.doc-meta {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+h1 {
+  font-size: 1.35rem;
+  margin: 1.25rem 0 0.5rem;
+  color: #0c4a6e;
+}
+
+h2 {
+  font-size: 1.1rem;
+  margin: 1rem 0 0.45rem;
+  color: #155e75;
+}
+
+p {
+  margin: 0.4rem 0;
+}
+
+ul {
+  margin: 0.35rem 0 0.6rem 1.1rem;
+  padding: 0;
+}
+
+li {
+  margin: 0.2rem 0;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #ccc;
+  margin: 1rem 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8pt;
+  margin: 0.6rem 0 1rem;
+  table-layout: fixed;
+}
+
+th,
+td {
+  border: 1px solid #cbd5e1;
+  padding: 4px 5px;
+  vertical-align: top;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+th {
+  background: #f0f9ff;
+  font-weight: 600;
+  text-align: left;
+}
+
+tr:nth-child(even) td {
+  background: #fafafa;
+}
+
+code {
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
+  font-size: 0.88em;
+  background: #f1f5f9;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.muted {
+  color: #64748b;
+  font-size: 0.92em;
+}
+</style>
+</head>
+<body>
+  <main class="report">
+    <header class="doc-header">
+      <h1 class="doc-title">Báo cáo bảo mật Snyk (dễ hiểu)</h1>
+      <p class="doc-meta">Dự án: <strong>web-ctmtqg</strong> · 09:44:57 6/4/2026</p>
+    </header>
+    <h1>Báo cáo bảo mật Snyk (dễ hiểu)</h1>
+<p><strong>Dự án:</strong> web-ctmtqg  
+<strong>Thời điểm quét (UTC):</strong> 2026-04-06T02:44:57.420Z  
+<strong>Hiển thị theo giờ Việt Nam:</strong> 09:44:57 6/4/2026</p>
+<hr />
+<h2>1. Tóm tắt cho lãnh đạo / phi kỹ thuật</h2>
+<ul>
+<li><strong>Thư viện (npm):</strong> 42 phát hiện trên 4 nhóm manifest được quét.</li>
+<li><strong>Phân bổ mức độ (thư viện):</strong> Nghiêm trọng 1, Cao 32, Trung bình 8, Thấp 1.</li>
+<li><strong>Mã nguồn tự viết:</strong> 14 phát hiện.</li>
+<li><strong>Phân bổ mức độ (mã nguồn):</strong> Nghiêm trọng 0, Cao 0, Trung bình 14, Thấp 0.</li>
+<li><strong>Hạ tầng dạng mã (IaC):</strong> Không quét IaC trong lần này.</li>
+<li>Quét toàn repo dễ vướng file trong node_modules. Thư mục CI/GitLab và docker-compose hiện không được Snyk xử lý như Terraform/Kubernetes/CloudFormation. Khi có thư mục Terraform/K8s riêng, hãy chạy quét riêng trên đó.</li>
+</ul>
+<h2>2. Các khái niệm được giải thích ngắn gọn</h2>
+<ul>
+<li><strong>Software Composition Analysis:</strong> Software Composition Analysis — phân tích thư viện/phụ thuộc mở.</li>
+<li><strong>Static Application Security Testing:</strong> Static Application Security Testing — quét tĩnh mã nguồn.</li>
+<li><strong>CVE:</strong> Mã định danh lỗ hổng công khai.</li>
+<li><strong>Điểm CVSS:</strong> Điểm mức độ nghiêm trọng (thang điểm, càng cao càng nghiêm trọng).</li>
+</ul>
+<h2>3. Rủi ro từ thư viện (npm) — hiểu nhanh + việc cần làm</h2>
+<table><thead><tr><th>STT</th><th>Gói</th><th>Phiên bản</th><th>Mức độ</th><th>Hiểu đơn giản</th><th>CVE</th><th>Gợi ý khắc phục</th><th>Manifest</th></tr></thead><tbody><tr><td>1</td><td>ajv</td><td>6.12.6</td><td>Cao</td><td>Tấn công làm regex xử lý quá lâu → có thể làm chậm hoặc treo dịch vụ (từ chối dịch vụ).</td><td>CVE-2025-69873</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 6.14.0, 8.18.0.</td><td>package-lock.json</td></tr><tr><td>2</td><td>ajv</td><td>6.12.6</td><td>Cao</td><td>Tấn công làm regex xử lý quá lâu → có thể làm chậm hoặc treo dịch vụ (từ chối dịch vụ).</td><td>CVE-2025-69873</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 6.14.0, 8.18.0.</td><td>package-lock.json</td></tr><tr><td>3</td><td>brace-expansion</td><td>1.1.12</td><td>Cao</td><td>Vòng lặp vô hạn có thể khiến tiến trình bị treo khi xử lý dữ liệu đặc biệt.</td><td>CVE-2026-33750</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 1.1.13, 2.0.3, 3.0.2, 5.0.5.</td><td>package-lock.json</td></tr><tr><td>4</td><td>brace-expansion</td><td>1.1.12</td><td>Cao</td><td>Vòng lặp vô hạn có thể khiến tiến trình bị treo khi xử lý dữ liệu đặc biệt.</td><td>CVE-2026-33750</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 1.1.13, 2.0.3, 3.0.2, 5.0.5.</td><td>package-lock.json</td></tr><tr><td>5</td><td>brace-expansion</td><td>1.1.12</td><td>Cao</td><td>Vòng lặp vô hạn có thể khiến tiến trình bị treo khi xử lý dữ liệu đặc biệt.</td><td>CVE-2026-33750</td><td>Xem khuyến nghị Snyk; phiên bản đã sửa: 1.1.13, 2.0.3, 3.0.2, 5.0.5.</td><td>package-lock.json</td></tr><tr><td>6</td><td>brace-expansion</td><td>2.0.2</td><td>Cao</td><td>Vòng lặp vô hạn có thể khiến tiến trình bị treo khi xử lý dữ liệu đặc biệt.</td><td>CVE-2026-33750</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 1.1.13, 2.0.3, 3.0.2, 5.0.5.</td><td>package-lock.json</td></tr><tr><td>7</td><td>brace-expansion</td><td>2.0.2</td><td>Cao</td><td>Vòng lặp vô hạn có thể khiến tiến trình bị treo khi xử lý dữ liệu đặc biệt.</td><td>CVE-2026-33750</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 1.1.13, 2.0.3, 3.0.2, 5.0.5.</td><td>package-lock.json</td></tr><tr><td>8</td><td>flatted</td><td>3.3.3</td><td>Cao</td><td>Đệ quy quá sâu có thể gây tràn stack / treo ứng dụng.</td><td>CVE-2026-32141</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.4.0.</td><td>package-lock.json</td></tr><tr><td>9</td><td>flatted</td><td>3.3.3</td><td>Nghiêm trọng</td><td>Kẻ tấn công có thể “bơm” thuộc tính vào prototype object → thay đổi hành vi toàn app.</td><td>CVE-2026-33228</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.4.2.</td><td>package-lock.json</td></tr><tr><td>10</td><td>inflight</td><td>1.0.6</td><td>Trung bình</td><td>Tài nguyên (bộ nhớ, handle…) có thể không được giải phóng đúng cách.</td><td>—</td><td>Xem khuyến nghị Snyk; phiên bản đã sửa: —.</td><td>package-lock.json</td></tr><tr><td>11</td><td>minimatch</td><td>3.1.2</td><td>Cao</td><td>Tấn công làm regex xử lý quá lâu → có thể làm chậm hoặc treo dịch vụ (từ chối dịch vụ).</td><td>CVE-2026-26996</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.1.3, 4.2.4, 5.1.7, 6.2.1, 7.4.7, 8.0.5, 9.0.6, 10.2.1.</td><td>package-lock.json</td></tr><tr><td>12</td><td>minimatch</td><td>3.1.2</td><td>Cao</td><td>Thuật toán xử lý có độ phức tạp kém trong trường hợp xấu → dễ bị làm chậm có chủ đích.</td><td>CVE-2026-27903</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.1.3, 4.2.5, 5.1.8, 6.2.2, 7.4.8, 8.0.6, 9.0.7, 10.2.3.</td><td>package-lock.json</td></tr><tr><td>13</td><td>minimatch</td><td>3.1.2</td><td>Cao</td><td>Tấn công làm regex xử lý quá lâu → có thể làm chậm hoặc treo dịch vụ (từ chối dịch vụ).</td><td>CVE-2026-26996</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.1.3, 4.2.4, 5.1.7, 6.2.1, 7.4.7, 8.0.5, 9.0.6, 10.2.1.</td><td>package-lock.json</td></tr><tr><td>14</td><td>minimatch</td><td>3.1.2</td><td>Cao</td><td>Thuật toán xử lý có độ phức tạp kém trong trường hợp xấu → dễ bị làm chậm có chủ đích.</td><td>CVE-2026-27903</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.1.3, 4.2.5, 5.1.8, 6.2.2, 7.4.8, 8.0.6, 9.0.7, 10.2.3.</td><td>package-lock.json</td></tr><tr><td>15</td><td>minimatch</td><td>3.1.2</td><td>Cao</td><td>Tấn công làm regex xử lý quá lâu → có thể làm chậm hoặc treo dịch vụ (từ chối dịch vụ).</td><td>CVE-2026-26996</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.1.3, 4.2.4, 5.1.7, 6.2.1, 7.4.7, 8.0.5, 9.0.6, 10.2.1.</td><td>package-lock.json</td></tr><tr><td>16</td><td>minimatch</td><td>3.1.2</td><td>Cao</td><td>Thuật toán xử lý có độ phức tạp kém trong trường hợp xấu → dễ bị làm chậm có chủ đích.</td><td>CVE-2026-27903</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.1.3, 4.2.5, 5.1.8, 6.2.2, 7.4.8, 8.0.6, 9.0.7, 10.2.3.</td><td>package-lock.json</td></tr><tr><td>17</td><td>minimatch</td><td>3.1.2</td><td>Cao</td><td>Tấn công làm regex xử lý quá lâu → có thể làm chậm hoặc treo dịch vụ (từ chối dịch vụ).</td><td>CVE-2026-26996</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.1.3, 4.2.4, 5.1.7, 6.2.1, 7.4.7, 8.0.5, 9.0.6, 10.2.1.</td><td>package-lock.json</td></tr><tr><td>18</td><td>minimatch</td><td>3.1.2</td><td>Cao</td><td>Thuật toán xử lý có độ phức tạp kém trong trường hợp xấu → dễ bị làm chậm có chủ đích.</td><td>CVE-2026-27903</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.1.3, 4.2.5, 5.1.8, 6.2.2, 7.4.8, 8.0.6, 9.0.7, 10.2.3.</td><td>package-lock.json</td></tr><tr><td>19</td><td>minimatch</td><td>3.1.2</td><td>Cao</td><td>Tấn công làm regex xử lý quá lâu → có thể làm chậm hoặc treo dịch vụ (từ chối dịch vụ).</td><td>CVE-2026-26996</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.1.3, 4.2.4, 5.1.7, 6.2.1, 7.4.7, 8.0.5, 9.0.6, 10.2.1.</td><td>package-lock.json</td></tr><tr><td>20</td><td>minimatch</td><td>3.1.2</td><td>Cao</td><td>Thuật toán xử lý có độ phức tạp kém trong trường hợp xấu → dễ bị làm chậm có chủ đích.</td><td>CVE-2026-27903</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.1.3, 4.2.5, 5.1.8, 6.2.2, 7.4.8, 8.0.6, 9.0.7, 10.2.3.</td><td>package-lock.json</td></tr><tr><td>21</td><td>minimatch</td><td>3.1.2</td><td>Cao</td><td>Tấn công làm regex xử lý quá lâu → có thể làm chậm hoặc treo dịch vụ (từ chối dịch vụ).</td><td>CVE-2026-26996</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.1.3, 4.2.4, 5.1.7, 6.2.1, 7.4.7, 8.0.5, 9.0.6, 10.2.1.</td><td>package-lock.json</td></tr><tr><td>22</td><td>minimatch</td><td>3.1.2</td><td>Cao</td><td>Thuật toán xử lý có độ phức tạp kém trong trường hợp xấu → dễ bị làm chậm có chủ đích.</td><td>CVE-2026-27903</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.1.3, 4.2.5, 5.1.8, 6.2.2, 7.4.8, 8.0.6, 9.0.7, 10.2.3.</td><td>package-lock.json</td></tr><tr><td>23</td><td>minimatch</td><td>3.1.2</td><td>Cao</td><td>Tấn công làm regex xử lý quá lâu → có thể làm chậm hoặc treo dịch vụ (từ chối dịch vụ).</td><td>CVE-2026-26996</td><td>Xem khuyến nghị Snyk; phiên bản đã sửa: 3.1.3, 4.2.4, 5.1.7, 6.2.1, 7.4.7, 8.0.5, 9.0.6, 10.2.1.</td><td>package-lock.json</td></tr><tr><td>24</td><td>minimatch</td><td>3.1.2</td><td>Cao</td><td>Thuật toán xử lý có độ phức tạp kém trong trường hợp xấu → dễ bị làm chậm có chủ đích.</td><td>CVE-2026-27903</td><td>Xem khuyến nghị Snyk; phiên bản đã sửa: 3.1.3, 4.2.5, 5.1.8, 6.2.2, 7.4.8, 8.0.6, 9.0.7, 10.2.3.</td><td>package-lock.json</td></tr><tr><td>25</td><td>minimatch</td><td>9.0.5</td><td>Cao</td><td>Tấn công làm regex xử lý quá lâu → có thể làm chậm hoặc treo dịch vụ (từ chối dịch vụ).</td><td>CVE-2026-26996</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.1.3, 4.2.4, 5.1.7, 6.2.1, 7.4.7, 8.0.5, 9.0.6, 10.2.1.</td><td>package-lock.json</td></tr><tr><td>26</td><td>minimatch</td><td>9.0.5</td><td>Cao</td><td>Tấn công làm regex xử lý quá lâu → có thể làm chậm hoặc treo dịch vụ (từ chối dịch vụ).</td><td>CVE-2026-27904</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 8.0.6, 9.0.7, 10.2.3.</td><td>package-lock.json</td></tr><tr><td>27</td><td>minimatch</td><td>9.0.5</td><td>Cao</td><td>Thuật toán xử lý có độ phức tạp kém trong trường hợp xấu → dễ bị làm chậm có chủ đích.</td><td>CVE-2026-27903</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.1.3, 4.2.5, 5.1.8, 6.2.2, 7.4.8, 8.0.6, 9.0.7, 10.2.3.</td><td>package-lock.json</td></tr><tr><td>28</td><td>minimatch</td><td>5.1.6</td><td>Cao</td><td>Tấn công làm regex xử lý quá lâu → có thể làm chậm hoặc treo dịch vụ (từ chối dịch vụ).</td><td>CVE-2026-26996</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.1.3, 4.2.4, 5.1.7, 6.2.1, 7.4.7, 8.0.5, 9.0.6, 10.2.1.</td><td>package-lock.json</td></tr><tr><td>29</td><td>minimatch</td><td>5.1.6</td><td>Cao</td><td>Thuật toán xử lý có độ phức tạp kém trong trường hợp xấu → dễ bị làm chậm có chủ đích.</td><td>CVE-2026-27903</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 3.1.3, 4.2.5, 5.1.8, 6.2.2, 7.4.8, 8.0.6, 9.0.7, 10.2.3.</td><td>package-lock.json</td></tr><tr><td>30</td><td>next</td><td>16.0.10</td><td>Cao</td><td>Không giới hạn tài nguyên → có thể bị lạm dụng để làm cạn kiệt CPU/bộ nhớ.</td><td>CVE-2025-59471</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 15.5.10, 16.1.1-canary.15, 16.1.5.</td><td>package-lock.json</td></tr><tr><td>31</td><td>next</td><td>16.0.10</td><td>Cao</td><td>Không giới hạn tài nguyên → có thể bị lạm dụng để làm cạn kiệt CPU/bộ nhớ.</td><td>CVE-2025-59472</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 15.6.0-canary.61, 16.1.1-canary.16, 16.1.5.</td><td>package-lock.json</td></tr><tr><td>32</td><td>next</td><td>16.0.10</td><td>Trung bình</td><td>Không giới hạn tài nguyên → có thể bị lạm dụng để làm cạn kiệt CPU/bộ nhớ.</td><td>CVE-2026-27980</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 16.1.7, 16.2.0-canary.54.</td><td>package-lock.json</td></tr><tr><td>33</td><td>next</td><td>16.0.10</td><td>Trung bình</td><td>Trang độc hại có thể lừa trình duyệt gửi yêu cầu thay mặt người dùng đã đăng nhập.</td><td>CVE-2026-27978</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 16.1.7, 16.2.0-canary.102.</td><td>package-lock.json</td></tr><tr><td>34</td><td>next</td><td>16.0.10</td><td>Trung bình</td><td>Xung đột cách hiểu HTTP giữa proxy và server → có thể bị lách kiểm soát hoặc cache poisoning.</td><td>CVE-2026-29057</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 15.5.13, 16.1.7, 16.2.0-canary.102.</td><td>package-lock.json</td></tr><tr><td>35</td><td>next</td><td>16.0.10</td><td>Thấp</td><td>WebSocket có thể chấp nhận kết nối từ nguồn không đáng tin nếu không kiểm tra Origin.</td><td>CVE-2026-27977</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 16.1.7, 16.2.0-canary.102.</td><td>package-lock.json</td></tr><tr><td>36</td><td>picomatch</td><td>2.3.1</td><td>Cao</td><td>Tấn công làm regex xử lý quá lâu → có thể làm chậm hoặc treo dịch vụ (từ chối dịch vụ).</td><td>CVE-2026-33671</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 2.3.2, 3.0.2, 4.0.4.</td><td>package-lock.json</td></tr><tr><td>37</td><td>picomatch</td><td>2.3.1</td><td>Trung bình</td><td>Kẻ tấn công có thể “bơm” thuộc tính vào prototype object → thay đổi hành vi toàn app.</td><td>CVE-2026-33672</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 2.3.2, 3.0.2, 4.0.4.</td><td>package-lock.json</td></tr><tr><td>38</td><td>picomatch</td><td>4.0.3</td><td>Cao</td><td>Tấn công làm regex xử lý quá lâu → có thể làm chậm hoặc treo dịch vụ (từ chối dịch vụ).</td><td>CVE-2026-33671</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 2.3.2, 3.0.2, 4.0.4.</td><td>package-lock.json</td></tr><tr><td>39</td><td>picomatch</td><td>4.0.3</td><td>Trung bình</td><td>Kẻ tấn công có thể “bơm” thuộc tính vào prototype object → thay đổi hành vi toàn app.</td><td>CVE-2026-33672</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 2.3.2, 3.0.2, 4.0.4.</td><td>package-lock.json</td></tr><tr><td>40</td><td>xlsx</td><td>0.18.5</td><td>Trung bình</td><td>Kẻ tấn công có thể “bơm” thuộc tính vào prototype object → thay đổi hành vi toàn app.</td><td>CVE-2023-30533</td><td>Xem khuyến nghị Snyk; phiên bản đã sửa: —.</td><td>package-lock.json</td></tr><tr><td>41</td><td>xlsx</td><td>0.18.5</td><td>Cao</td><td>Tấn công làm regex xử lý quá lâu → có thể làm chậm hoặc treo dịch vụ (từ chối dịch vụ).</td><td>CVE-2024-22363</td><td>Xem khuyến nghị Snyk; phiên bản đã sửa: —.</td><td>package-lock.json</td></tr><tr><td>42</td><td>pnpm</td><td>9.15.9</td><td>Trung bình</td><td>Thuật toán băm yếu → dễ bị tấn công dò/hợp lệ hóa (tùy ngữ cảnh sử dụng).</td><td>CVE-2024-47829</td><td>Ưu tiên nâng cấp (có đường nâng cấp). Phiên bản đã sửa gợi ý: 10.0.0-alpha.0.</td><td>.npm-ci/_npx/8959f4e966f464e2/package-lock.json</td></tr></tbody></table>
+<p><strong>Ghi chú:</strong> Một lỗ hổng có thể xuất hiện nhiều dòng nếu có nhiều đường phụ thuộc khác nhau tới cùng gói lỗi thời.</p>
+<h2>4. Rủi ro trong mã nguồn (SAST)</h2>
+<table><thead><tr><th>STT</th><th>Vấn đề</th><th>Mức độ</th><th>Hiểu đơn giản</th><th>File</th><th>Dòng</th></tr></thead><tbody><tr><td>1</td><td>Use of Externally-Controlled Format String</td><td>Trung bình</td><td>Dữ liệu do người dùng kiểm soát đi vào chuỗi định dạng (format) → có thể rò rỉ thông tin hoặc hành vi không an toàn.</td><td><code>src/app/services/account-manager/route.ts</code></td><td>122</td></tr><tr><td>2</td><td>Use of Externally-Controlled Format String</td><td>Trung bình</td><td>Dữ liệu do người dùng kiểm soát đi vào chuỗi định dạng (format) → có thể rò rỉ thông tin hoặc hành vi không an toàn.</td><td><code>supabase/functions/chart_data/index.ts</code></td><td>136</td></tr><tr><td>3</td><td>Use of Externally-Controlled Format String</td><td>Trung bình</td><td>Dữ liệu do người dùng kiểm soát đi vào chuỗi định dạng (format) → có thể rò rỉ thông tin hoặc hành vi không an toàn.</td><td><code>supabase/functions/chart_data/index.ts</code></td><td>258</td></tr><tr><td>4</td><td>Use of Externally-Controlled Format String</td><td>Trung bình</td><td>Dữ liệu do người dùng kiểm soát đi vào chuỗi định dạng (format) → có thể rò rỉ thông tin hoặc hành vi không an toàn.</td><td><code>supabase/functions/chart_data/index.ts</code></td><td>289</td></tr><tr><td>5</td><td>Use of Externally-Controlled Format String</td><td>Trung bình</td><td>Dữ liệu do người dùng kiểm soát đi vào chuỗi định dạng (format) → có thể rò rỉ thông tin hoặc hành vi không an toàn.</td><td><code>supabase/functions/table_data/index.ts</code></td><td>323</td></tr><tr><td>6</td><td>Use of Externally-Controlled Format String</td><td>Trung bình</td><td>Dữ liệu do người dùng kiểm soát đi vào chuỗi định dạng (format) → có thể rò rỉ thông tin hoặc hành vi không an toàn.</td><td><code>supabase/functions/table_data/index.ts</code></td><td>368</td></tr><tr><td>7</td><td>Use of Externally-Controlled Format String</td><td>Trung bình</td><td>Dữ liệu do người dùng kiểm soát đi vào chuỗi định dạng (format) → có thể rò rỉ thông tin hoặc hành vi không an toàn.</td><td><code>supabase/functions/table_data/index.ts</code></td><td>1004</td></tr><tr><td>8</td><td>Use of Externally-Controlled Format String</td><td>Trung bình</td><td>Dữ liệu do người dùng kiểm soát đi vào chuỗi định dạng (format) → có thể rò rỉ thông tin hoặc hành vi không an toàn.</td><td><code>supabase/functions/table_data/index.ts</code></td><td>1065</td></tr><tr><td>9</td><td>Use of Externally-Controlled Format String</td><td>Trung bình</td><td>Dữ liệu do người dùng kiểm soát đi vào chuỗi định dạng (format) → có thể rò rỉ thông tin hoặc hành vi không an toàn.</td><td><code>supabase/functions/table_data/index.ts</code></td><td>1126</td></tr><tr><td>10</td><td>Use of Externally-Controlled Format String</td><td>Trung bình</td><td>Dữ liệu do người dùng kiểm soát đi vào chuỗi định dạng (format) → có thể rò rỉ thông tin hoặc hành vi không an toàn.</td><td><code>supabase/functions/table_data/index.ts</code></td><td>1187</td></tr><tr><td>11</td><td>Use of Externally-Controlled Format String</td><td>Trung bình</td><td>Dữ liệu do người dùng kiểm soát đi vào chuỗi định dạng (format) → có thể rò rỉ thông tin hoặc hành vi không an toàn.</td><td><code>supabase/functions/table_data/index.ts</code></td><td>1251</td></tr><tr><td>12</td><td>Use of Externally-Controlled Format String</td><td>Trung bình</td><td>Dữ liệu do người dùng kiểm soát đi vào chuỗi định dạng (format) → có thể rò rỉ thông tin hoặc hành vi không an toàn.</td><td><code>supabase/functions/table_data/index.ts</code></td><td>1265</td></tr><tr><td>13</td><td>Use of Externally-Controlled Format String</td><td>Trung bình</td><td>Dữ liệu do người dùng kiểm soát đi vào chuỗi định dạng (format) → có thể rò rỉ thông tin hoặc hành vi không an toàn.</td><td><code>src/app/services/account-manager/route.ts</code></td><td>243</td></tr><tr><td>14</td><td>Use of Hardcoded Passwords</td><td>Trung bình</td><td>Mật khẩu hoặc chuỗi nhạy cảm bị ghi cứng trong code → lộ khi public repo hoặc build.</td><td><code>src/components/account-manager/import-account-dialog.tsx</code></td><td>73</td></tr></tbody></table>
+<h2>5. Bước tiếp theo đề xuất</h2>
+<p>1. Nâng cấp <strong>next</strong> và các gói trực tiếp theo bảng Snyk (ưu tiên mức Cao / Nghiêm trọng).
+2. Chạy <code>pnpm update</code> / chỉnh <code>package.json</code> rồi kiểm tra lại bằng <code>snyk test</code>.
+3. Với SAST: rà soát format string và bỏ hardcode mật khẩu khỏi code (dùng biến môi trường / vault).
+4. Khi có thư mục Terraform/Kubernetes, chạy <code>snyk iac test &lt;thư_mục&gt;</code> riêng.</p>
+<hr />
+<p class="muted">*Báo cáo được tạo tự động từ <code>reports/snyk-full-report.json</code> — không thay thế đánh giá thủ công hoặc pentest.*</p>
+
+  </main>
+</body>
+</html>
